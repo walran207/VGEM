@@ -1,0 +1,505 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="VGEM Network provides high-speed fiber internet solutions with 10 years of experience, 99.9% uptime, and reliable 24/7 support." />
+  <meta name="keywords" content="VGEM Network, fiber internet solutions, high-speed fiber internet, residential fiber internet, business fiber internet, 24/7 technical support, network uptime" />
+  <title>VGEM Network | Fiber Internet Solutions</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandBlue: '#0F2A5F',
+            brandViolet: '#6A00F4',
+            brandCyan: '#4FD1C5',
+          },
+          boxShadow: {
+            glow: '0 0 24px rgba(79, 209, 197, 0.45)',
+            deep: '0 24px 55px rgba(0, 0, 0, 0.38)',
+          },
+          transitionTimingFunction: {
+            smooth: 'ease-in-out',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Montserrat", sans-serif;
+      background:
+        radial-gradient(circle at 86% 10%, rgba(180, 130, 255, 0.35), rgba(180, 130, 255, 0) 44%),
+        linear-gradient(130deg, #081733 0%, #0f2a5f 45%, #6a00f4 100%);
+      background-size: 135% 135%;
+      animation: gradientShift 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    .floating-shape {
+      position: fixed;
+      border-radius: 999px;
+      filter: blur(38px);
+      opacity: 0.4;
+      z-index: 0;
+      pointer-events: none;
+      animation: float 10s ease-in-out infinite;
+    }
+
+    .shape-a {
+      width: 260px;
+      height: 260px;
+      left: -90px;
+      top: 22%;
+      background: rgba(70, 163, 255, 0.5);
+    }
+
+    .shape-b {
+      width: 320px;
+      height: 320px;
+      right: -120px;
+      top: 58%;
+      background: rgba(106, 0, 244, 0.45);
+      animation-delay: -3s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-16px); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 600ms ease, transform 600ms ease;
+    }
+
+    .reveal.in-view {
+      opacity: 1;
+      transform: translateY(0px);
+    }
+
+    .btn-ripple {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .btn-ripple::after {
+      content: "";
+      position: absolute;
+      width: 140%;
+      height: 280%;
+      left: -20%;
+      top: 130%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0) 62%);
+      transition: transform 300ms ease-in-out;
+      transform: translateY(0);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .btn-ripple:hover::after {
+      transform: translateY(-65%);
+    }
+  </style>
+</head>
+<body class="text-white overflow-x-hidden">
+  <div class="floating-shape shape-a" aria-hidden="true"></div>
+  <div class="floating-shape shape-b" aria-hidden="true"></div>
+
+  <div id="root" class="relative z-10"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useEffect, useState, useRef } = React;
+
+    const navItems = [
+      { id: 'hero', label: 'Home' },
+      { id: 'services', label: 'Services' },
+      { id: 'why', label: 'Why Us' },
+      { id: 'stats', label: 'Customers' },
+      { id: 'contact', label: 'Contact' },
+    ];
+
+    function Navbar() {
+      const [scrolled, setScrolled] = useState(false);
+      const [active, setActive] = useState('hero');
+
+      useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > 20);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        const sections = navItems
+          .map((item) => document.getElementById(item.id))
+          .filter(Boolean);
+        const observer = new IntersectionObserver(
+          (entries) => {
+            const visible = entries
+              .filter((entry) => entry.isIntersecting)
+              .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+            if (visible[0]) setActive(visible[0].target.id);
+          },
+          { threshold: [0.25, 0.5, 0.75], rootMargin: '-20% 0px -50% 0px' }
+        );
+
+        sections.forEach((section) => observer.observe(section));
+        return () => {
+          window.removeEventListener('scroll', onScroll);
+          observer.disconnect();
+        };
+      }, []);
+
+      return (
+        <header className={`sticky top-0 z-40 border-b transition-all duration-300 ease-in-out ${scrolled ? 'bg-[#040A1D]/88 backdrop-blur-lg border-cyan-300/20 shadow-[0_12px_32px_rgba(0,0,0,0.45),0_1px_0_rgba(79,209,197,0.35)]' : 'bg-transparent border-transparent'}`}>
+          <nav className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+            <a href="#hero" className="inline-flex items-center gap-3 uppercase tracking-[1px] font-bold text-sm">
+              <span className="w-10 h-10 rounded-xl border border-brandCyan/70 bg-gradient-to-br from-brandCyan/30 to-brandViolet/60 grid place-items-center shadow-glow">VG</span>
+              <span className="hidden sm:inline">VGEM Network</span>
+            </a>
+
+            <ul className="hidden md:flex items-center gap-6">
+              {navItems.map((item) => (
+                <li key={item.id}>
+                  <a
+                    href={`#${item.id}`}
+                    aria-label={`Go to ${item.label} section`}
+                    className={`group relative text-xs uppercase tracking-[2px] transition-all duration-300 ease-in-out ${active === item.id ? 'text-white' : 'text-white/75 hover:text-white'}`}
+                  >
+                    {item.label}
+                    <span className={`absolute -bottom-1 left-0 h-[2px] w-full origin-left bg-gradient-to-r from-brandCyan to-cyan-300 transition-transform duration-300 ${active === item.id ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </header>
+      );
+    }
+
+    function HeroSection() {
+      useEffect(() => {
+        const target = document.getElementById('logoCard');
+        const onMove = (event) => {
+          if (!target || window.innerWidth < 1024) return;
+          const x = (event.clientX / window.innerWidth - 0.5) * 2;
+          const y = (event.clientY / window.innerHeight - 0.5) * 2;
+          target.style.transform = `translate3d(${x * 4}px, ${y * 4}px, 0)`;
+          target.style.transition = 'transform 150ms linear';
+        };
+        window.addEventListener('mousemove', onMove);
+        return () => window.removeEventListener('mousemove', onMove);
+      }, []);
+
+      return (
+        <section id="hero" className="min-h-[88vh] grid place-items-center px-4 sm:px-6 py-14">
+          <div id="heroGrid" className="max-w-6xl w-full grid lg:grid-cols-2 gap-10 items-center">
+            <div id="logoCard" className="reveal rounded-[20px] p-[1px] bg-gradient-to-br from-cyan-300/45 via-white/20 to-brandViolet/45 shadow-[0_0_40px_rgba(79,209,197,0.15)]">
+              <article className="rounded-[20px] p-6 sm:p-8 border border-white/10 bg-[rgba(255,255,255,0.05)] backdrop-blur-md shadow-[inset_0_1px_20px_rgba(255,255,255,0.06),0_24px_55px_rgba(0,0,0,0.38)] hover:scale-[1.01] transition-transform duration-300 ease-in-out">
+                <svg viewBox="0 0 520 350" className="w-full h-auto" role="img" aria-label="VG logo with network node lines">
+                  <defs>
+                    <linearGradient id="nodeLine" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#67E8F9" />
+                      <stop offset="100%" stopColor="#FFFFFF" />
+                    </linearGradient>
+                  </defs>
+
+                  <text x="24" y="286" fontSize="228" fontWeight="900" fill="#FFFFFF" fontFamily="Montserrat, sans-serif">VG</text>
+                  <path d="M138 120 L220 68 L291 108 L180 126 Z" stroke="url(#nodeLine)" strokeWidth="6" fill="none" />
+                  <circle cx="138" cy="120" r="12" fill="#67E8F9" stroke="#fff" strokeWidth="4" />
+                  <circle cx="220" cy="68" r="12" fill="#fff" stroke="#fff" strokeWidth="4" />
+                  <circle cx="291" cy="108" r="12" fill="#fff" stroke="#fff" strokeWidth="4" />
+                  <circle cx="180" cy="126" r="12" fill="#67E8F9" stroke="#fff" strokeWidth="4" />
+                  <line x1="180" y1="126" x2="256" y2="126" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
+                  <circle cx="218" cy="126" r="9" fill="#1E3A8A" stroke="#fff" strokeWidth="4" />
+                </svg>
+              </article>
+            </div>
+
+            <article className="reveal text-center lg:text-left">
+              <h1 className="uppercase font-black leading-[0.95] text-[clamp(2.2rem,8vw,5.3rem)] [text-shadow:0_8px_24px_rgba(0,0,0,0.4)]">
+                VGEM NETWORK
+              </h1>
+              <h2 className="mt-2 uppercase font-bold text-[clamp(1.4rem,4.8vw,2.8rem)] text-white/95 tracking-[1px]">
+                FIBER SOLUTION
+              </h2>
+              <p className="mt-4 uppercase tracking-[3.6px] text-[clamp(0.72rem,1.8vw,0.92rem)] text-cyan-200/85 [text-shadow:0_0_14px_rgba(79,209,197,0.6)]">
+                10 Years of Experience in High-Speed Fiber Internet
+              </p>
+              <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+                <a href="#contact" className="btn-ripple rounded-[14px] px-6 py-3 bg-gradient-to-r from-[#3EDFD8] to-[#4FD1C5] text-slate-900 font-bold uppercase tracking-[1.1px] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandCyan/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1d45] hover:shadow-[0_0_24px_rgba(79,209,197,0.58)] transition-all duration-300 ease-in-out">
+                  Get Connected
+                </a>
+                <a href="#services" className="rounded-[14px] px-6 py-3 border border-white/20 bg-white/10 text-white/90 font-semibold uppercase tracking-[1.1px] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandCyan/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1d45] hover:border-brandCyan/80 hover:shadow-[0_0_20px_rgba(79,209,197,0.4)] transition-all duration-300 ease-in-out">
+                  View Plans
+                </a>
+              </div>
+            </article>
+          </div>
+        </section>
+      );
+    }
+
+    function FeatureCard({ icon, title, description, delay = 0 }) {
+      return (
+        <article
+          className="reveal rounded-[18px] border border-white/15 bg-white/10 p-7 text-center shadow-deep hover:-translate-y-1.5 hover:scale-[1.03] hover:border-brandCyan/75 hover:shadow-[0_0_30px_rgba(79,209,197,0.56),0_28px_55px_rgba(0,0,0,0.45)] transition-all duration-300 ease-in-out"
+          style={{ transitionDelay: `${delay}ms` }}
+        >
+          <div className="w-20 h-20 mx-auto mb-5 rounded-full grid place-items-center bg-gradient-to-br from-brandCyan to-cyan-300 shadow-[0_0_25px_rgba(79,209,197,0.4),0_10px_20px_rgba(2,12,24,0.45)]">
+            {icon}
+          </div>
+          <h3 className="uppercase font-bold text-lg">{title}</h3>
+          <p className="mt-2 text-sm leading-6 text-white/72">{description}</p>
+        </article>
+      );
+    }
+
+    function ServicesSection() {
+      return (
+        <section id="services" className="px-4 sm:px-6 pb-16">
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <FeatureCard
+              delay={0}
+              title="Gigabit Internet"
+              description="Fast and reliable fiber connectivity."
+              icon={
+                <svg viewBox="0 0 24 24" className="w-8 h-8 stroke-[#083344] fill-none stroke-[2.2]">
+                  <path d="M4 14a8 8 0 1 1 16 0" />
+                  <path d="M12 14l4-4" />
+                  <circle cx="12" cy="14" r="1.4" className="fill-[#083344] stroke-none" />
+                </svg>
+              }
+            />
+            <FeatureCard
+              delay={100}
+              title="Trusted Infrastructure"
+              description="Built with advanced fiber technology."
+              icon={
+                <svg viewBox="0 0 24 24" className="w-8 h-8 stroke-[#083344] fill-none stroke-[2.2]">
+                  <path d="M3 10.5L12 3l9 7.5" />
+                  <path d="M5 9.5V21h14V9.5" />
+                  <path d="M9.5 21v-6h5v6" />
+                </svg>
+              }
+            />
+            <FeatureCard
+              delay={200}
+              title="Affordable Plans"
+              description="The best pricing for residential and business."
+              icon={
+                <svg viewBox="0 0 24 24" className="w-8 h-8 stroke-[#083344] fill-none stroke-[2.2]">
+                  <circle cx="12" cy="12" r="8" />
+                  <path d="M12 8v8" />
+                  <path d="M9.5 9.5c0-1.2 1.2-2 2.5-2s2.5.8 2.5 2-1.2 1.9-2.5 2c-1.3.1-2.5.8-2.5 2" />
+                </svg>
+              }
+            />
+          </div>
+        </section>
+      );
+    }
+
+    function WhyChooseSection() {
+      const points = [
+        { title: '10 Years Expertise', text: 'A decade of fiber rollout and optimization across homes and businesses.' },
+        { title: 'Enterprise-Grade Fiber', text: 'Scalable infrastructure engineered for uptime, speed, and secure delivery.' },
+        { title: 'Local Customer Support', text: 'Responsive team support with real people available when your network matters.' },
+        { title: 'Vendo and Computer Support', text: 'We support vendo system connectivity and computer network setup for homes and businesses.' },
+      ];
+
+      return (
+        <section id="why" className="px-4 sm:px-6 pb-16">
+          <div className="max-w-6xl mx-auto rounded-[20px] border border-white/15 bg-white/10 backdrop-blur-sm p-6 sm:p-8 lg:p-10">
+            <h2 className="reveal uppercase font-extrabold tracking-[1.4px] text-2xl sm:text-3xl">Why Choose VGEM Network</h2>
+            <div className="mt-6 grid md:grid-cols-3 gap-5">
+              {points.map((item, idx) => (
+                <article key={item.title} className="reveal rounded-2xl border border-white/15 bg-black/20 p-5 hover:border-brandCyan/70 hover:shadow-[0_0_22px_rgba(79,209,197,0.35)] transition-all duration-300 ease-in-out" style={{ transitionDelay: `${idx * 100}ms` }}>
+                  <h3 className="font-bold uppercase text-base tracking-[1px]">{item.title}</h3>
+                  <p className="mt-2 text-white/70 text-sm leading-6">{item.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function CountUp({ end, suffix = '', duration = 1400, start = false, decimals = 0 }) {
+      const [value, setValue] = useState(0);
+
+      useEffect(() => {
+        if (!start) return;
+        let startTime = null;
+        let frame;
+
+        const tick = (ts) => {
+          if (!startTime) startTime = ts;
+          const progress = Math.min((ts - startTime) / duration, 1);
+          const next = progress * end;
+          setValue(next);
+          if (progress < 1) frame = requestAnimationFrame(tick);
+        };
+
+        frame = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(frame);
+      }, [end, duration, start]);
+
+      const formatted = decimals > 0
+        ? value.toFixed(decimals)
+        : Math.floor(value).toLocaleString();
+
+      return <>{formatted}{suffix}</>;
+    }
+
+    function StatsSection() {
+      const sectionRef = useRef(null);
+      const [startCount, setStartCount] = useState(false);
+      const stats = [
+        { value: 200, suffix: '+', label: 'Customers Served' },
+        { value: 10, suffix: '', label: 'Years Experience' },
+        { value: 99.9, suffix: '%', label: 'Network Uptime', decimals: 1 },
+        { value: 24, suffix: '/7', label: 'Technical Support' },
+      ];
+
+      useEffect(() => {
+        const node = sectionRef.current;
+        if (!node) return;
+        const observer = new IntersectionObserver(
+          (entries) => {
+            if (entries[0].isIntersecting) {
+              setStartCount(true);
+              observer.disconnect();
+            }
+          },
+          { threshold: 0.35 }
+        );
+        observer.observe(node);
+        return () => observer.disconnect();
+      }, []);
+
+      return (
+        <section
+          id="stats"
+          ref={sectionRef}
+          className="px-4 sm:px-6 py-16 border-y border-white/10 backdrop-blur-sm bg-[radial-gradient(circle_at_50%_40%,rgba(79,209,197,0.18),rgba(7,19,49,0.65)_38%,rgba(7,19,49,0.9)_100%)]"
+        >
+          <div className="max-w-6xl mx-auto grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {stats.map((item, idx) => (
+              <article key={item.label} className="reveal rounded-[18px] bg-white/10 border border-white/15 p-6 text-center" style={{ transitionDelay: `${idx * 90}ms` }}>
+                <h3 className="font-black text-4xl lg:text-5xl leading-none [text-shadow:0_0_20px_rgba(79,209,197,0.42)]">
+                  <CountUp end={item.value} suffix={item.suffix} decimals={item.decimals || 0} start={startCount} />
+                </h3>
+                <p className="mt-3 uppercase tracking-[1.5px] text-xs text-white/75">{item.label}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      );
+    }
+
+    function ContactSection() {
+      const inputClass = "w-full rounded-xl bg-black/25 border border-white/20 px-4 py-3 text-sm text-white/90 outline-none [box-shadow:inset_0_1px_3px_rgba(0,0,0,0.35)] focus:border-brandCyan focus:shadow-[0_0_10px_rgba(79,209,197,0.4),inset_0_1px_3px_rgba(0,0,0,0.35)] transition-all duration-300 ease-in-out";
+
+      return (
+        <section id="contact" className="px-4 sm:px-6 py-16">
+          <div className="max-w-6xl mx-auto rounded-[20px] border border-white/15 bg-gradient-to-br from-white/10 to-cyan-900/20 p-6 sm:p-8 lg:p-10 grid lg:grid-cols-2 gap-6 shadow-deep">
+            <article className="reveal rounded-2xl border border-white/15 bg-black/35 p-5 sm:p-6">
+              <h2 className="uppercase font-extrabold text-2xl sm:text-3xl">Contact Us</h2>
+              <p className="mt-2 text-white/70 text-sm">Send us a message and our fiber team will get back to you quickly.</p>
+
+              <form className="mt-6 space-y-4" action="#" method="post">
+                <input type="text" name="name" placeholder="Name" required className={inputClass} />
+                <input type="email" name="email" placeholder="Email" required className={inputClass} />
+                <input type="tel" name="phone" placeholder="Phone" required className={inputClass} />
+                <textarea name="message" rows="4" placeholder="Message" required className={`${inputClass} resize-y`}></textarea>
+                <button type="submit" className="btn-ripple w-full sm:w-auto rounded-[14px] px-7 py-3 bg-gradient-to-r from-[#3EDFD8] to-[#4FD1C5] text-slate-900 font-bold uppercase tracking-[1px] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandCyan/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1d45] hover:shadow-[0_0_24px_rgba(79,209,197,0.58)] transition-all duration-300 ease-in-out">
+                  Send Message
+                </button>
+              </form>
+            </article>
+
+            <aside className="reveal rounded-2xl border border-white/15 bg-white/10 p-5 sm:p-6">
+              <h3 className="uppercase font-bold text-xl">VGEM Network Solution</h3>
+              <ul className="mt-6 space-y-3 text-white/80">
+                <li><strong className="text-white">Phone:</strong> 09503392770</li>
+                <li><strong className="text-white">Email:</strong> edela8149@gmail.com</li>
+              </ul>
+
+              <div className="mt-7 flex items-center gap-3">
+                {[
+                  { short: 'F', label: 'Facebook' },
+                  { short: 'X', label: 'X or Twitter' },
+                  { short: 'in', label: 'LinkedIn' },
+                  { short: 'IG', label: 'Instagram' },
+                ].map((item) => (
+                  <a key={item.label} href="#" className="w-10 h-10 rounded-full border border-white/30 bg-gradient-to-br from-brandCyan/35 to-brandViolet/40 grid place-items-center text-xs font-bold hover:scale-110 hover:rotate-6 hover:border-brandCyan hover:shadow-[0_0_20px_rgba(79,209,197,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandCyan/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1d45] transition-all duration-300 ease-in-out" aria-label={item.label}>
+                    {item.short}
+                  </a>
+                ))}
+              </div>
+            </aside>
+          </div>
+        </section>
+      );
+    }
+
+    function App() {
+      useEffect(() => {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.14 }
+        );
+
+        document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+        return () => observer.disconnect();
+      }, []);
+
+      return (
+        <>
+          <Navbar />
+          <main>
+            <HeroSection />
+            <ServicesSection />
+            <WhyChooseSection />
+            <StatsSection />
+            <ContactSection />
+          </main>
+          <footer className="border-t border-white/15 py-5 text-center text-xs uppercase tracking-[1.2px] text-white/65">
+            © 2026 VGEM Network | Fiber Internet Solutions
+          </footer>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
