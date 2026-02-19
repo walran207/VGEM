@@ -144,6 +144,7 @@
     function Navbar() {
       const [scrolled, setScrolled] = useState(false);
       const [active, setActive] = useState('hero');
+      const [menuOpen, setMenuOpen] = useState(false);
 
       useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 20);
@@ -170,6 +171,14 @@
         };
       }, []);
 
+      useEffect(() => {
+        const onResize = () => {
+          if (window.innerWidth >= 768) setMenuOpen(false);
+        };
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+      }, []);
+
       return (
         <header className={`sticky top-0 z-40 border-b transition-all duration-300 ease-in-out ${scrolled ? 'bg-[#040A1D]/88 backdrop-blur-lg border-cyan-300/20 shadow-[0_12px_32px_rgba(0,0,0,0.45),0_1px_0_rgba(79,209,197,0.35)]' : 'bg-transparent border-transparent'}`}>
           <nav className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -192,7 +201,36 @@
                 </li>
               ))}
             </ul>
+
+            <button
+              type="button"
+              aria-label="Toggle menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-white/20 bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandCyan/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1d45]"
+            >
+              <span className="text-lg leading-none">{menuOpen ? '✕' : '☰'}</span>
+            </button>
           </nav>
+
+          {menuOpen && (
+            <div className="md:hidden border-t border-white/10 bg-[#070f29]/90 backdrop-blur-md">
+              <ul className="px-4 py-3 space-y-2">
+                {navItems.map((item) => (
+                  <li key={item.id}>
+                    <a
+                      href={`#${item.id}`}
+                      aria-label={`Go to ${item.label} section`}
+                      onClick={() => setMenuOpen(false)}
+                      className={`block rounded-lg px-3 py-2 text-sm uppercase tracking-[1.5px] transition-all duration-300 ease-in-out ${active === item.id ? 'text-white bg-white/10 border border-brandCyan/40' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </header>
       );
     }
@@ -212,9 +250,9 @@
       }, []);
 
       return (
-        <section id="hero" className="min-h-[88vh] grid place-items-center px-4 sm:px-6 py-14">
-          <div id="heroGrid" className="max-w-6xl w-full grid lg:grid-cols-2 gap-10 items-center">
-            <div id="logoCard" className="reveal rounded-[20px] p-[1px] bg-gradient-to-br from-cyan-300/45 via-white/20 to-brandViolet/45 shadow-[0_0_40px_rgba(79,209,197,0.15)]">
+        <section id="hero" className="min-h-[82vh] sm:min-h-[88vh] grid place-items-center px-4 sm:px-6 py-10 sm:py-14">
+          <div id="heroGrid" className="max-w-6xl w-full grid lg:grid-cols-2 gap-8 lg:gap-10 items-center">
+            <div id="logoCard" className="reveal w-full max-w-[560px] mx-auto rounded-[20px] p-[1px] bg-gradient-to-br from-cyan-300/45 via-white/20 to-brandViolet/45 shadow-[0_0_40px_rgba(79,209,197,0.15)]">
               <article className="rounded-[20px] p-6 sm:p-8 border border-white/10 bg-[rgba(255,255,255,0.05)] backdrop-blur-md shadow-[inset_0_1px_20px_rgba(255,255,255,0.06),0_24px_55px_rgba(0,0,0,0.38)] hover:scale-[1.01] transition-transform duration-300 ease-in-out">
                 <svg viewBox="0 0 520 350" className="w-full h-auto" role="img" aria-label="VG logo with network node lines">
                   <defs>
@@ -243,14 +281,14 @@
               <h2 className="mt-2 uppercase font-bold text-[clamp(1.4rem,4.8vw,2.8rem)] text-white/95 tracking-[1px]">
                 FIBER SOLUTION
               </h2>
-              <p className="mt-4 uppercase tracking-[3.6px] text-[clamp(0.72rem,1.8vw,0.92rem)] text-cyan-200/85 [text-shadow:0_0_14px_rgba(79,209,197,0.6)]">
+              <p className="mt-4 uppercase tracking-[2.4px] sm:tracking-[3.6px] text-[clamp(0.72rem,1.8vw,0.92rem)] text-cyan-200/85 [text-shadow:0_0_14px_rgba(79,209,197,0.6)]">
                 10 Years of Experience in High-Speed Fiber Internet
               </p>
               <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-                <a href="#contact" className="btn-ripple rounded-[14px] px-6 py-3 bg-gradient-to-r from-[#3EDFD8] to-[#4FD1C5] text-slate-900 font-bold uppercase tracking-[1.1px] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandCyan/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1d45] hover:shadow-[0_0_24px_rgba(79,209,197,0.58)] transition-all duration-300 ease-in-out">
+                <a href="#contact" className="btn-ripple w-full sm:w-auto text-center rounded-[14px] px-6 py-3 bg-gradient-to-r from-[#3EDFD8] to-[#4FD1C5] text-slate-900 font-bold uppercase tracking-[1.1px] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandCyan/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1d45] hover:shadow-[0_0_24px_rgba(79,209,197,0.58)] transition-all duration-300 ease-in-out">
                   Get Connected
                 </a>
-                <a href="#services" className="rounded-[14px] px-6 py-3 border border-white/20 bg-white/10 text-white/90 font-semibold uppercase tracking-[1.1px] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandCyan/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1d45] hover:border-brandCyan/80 hover:shadow-[0_0_20px_rgba(79,209,197,0.4)] transition-all duration-300 ease-in-out">
+                <a href="#services" className="w-full sm:w-auto text-center rounded-[14px] px-6 py-3 border border-white/20 bg-white/10 text-white/90 font-semibold uppercase tracking-[1.1px] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandCyan/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1d45] hover:border-brandCyan/80 hover:shadow-[0_0_20px_rgba(79,209,197,0.4)] transition-all duration-300 ease-in-out">
                   View Plans
                 </a>
               </div>
@@ -277,8 +315,8 @@
 
     function ServicesSection() {
       return (
-        <section id="services" className="px-4 sm:px-6 pb-16">
-          <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section id="services" className="px-4 sm:px-6 pb-12 sm:pb-16">
+          <div className="max-w-6xl mx-auto grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             <FeatureCard
               delay={0}
               title="Gigabit Internet"
@@ -329,10 +367,10 @@
       ];
 
       return (
-        <section id="why" className="px-4 sm:px-6 pb-16">
+        <section id="why" className="px-4 sm:px-6 pb-12 sm:pb-16">
           <div className="max-w-6xl mx-auto rounded-[20px] border border-white/15 bg-white/10 backdrop-blur-sm p-6 sm:p-8 lg:p-10">
             <h2 className="reveal uppercase font-extrabold tracking-[1.4px] text-2xl sm:text-3xl">Why Choose VGEM Network</h2>
-            <div className="mt-6 grid md:grid-cols-3 gap-5">
+            <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {points.map((item, idx) => (
                 <article key={item.title} className="reveal rounded-2xl border border-white/15 bg-black/20 p-5 hover:border-brandCyan/70 hover:shadow-[0_0_22px_rgba(79,209,197,0.35)] transition-all duration-300 ease-in-out" style={{ transitionDelay: `${idx * 100}ms` }}>
                   <h3 className="font-bold uppercase text-base tracking-[1px]">{item.title}</h3>
@@ -402,7 +440,7 @@
         <section
           id="stats"
           ref={sectionRef}
-          className="px-4 sm:px-6 py-16 border-y border-white/10 backdrop-blur-sm bg-[radial-gradient(circle_at_50%_40%,rgba(79,209,197,0.18),rgba(7,19,49,0.65)_38%,rgba(7,19,49,0.9)_100%)]"
+          className="px-4 sm:px-6 py-12 sm:py-16 border-y border-white/10 backdrop-blur-sm bg-[radial-gradient(circle_at_50%_40%,rgba(79,209,197,0.18),rgba(7,19,49,0.65)_38%,rgba(7,19,49,0.9)_100%)]"
         >
           <div className="max-w-6xl mx-auto grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {stats.map((item, idx) => (
@@ -422,7 +460,7 @@
       const inputClass = "w-full rounded-xl bg-black/25 border border-white/20 px-4 py-3 text-sm text-white/90 outline-none [box-shadow:inset_0_1px_3px_rgba(0,0,0,0.35)] focus:border-brandCyan focus:shadow-[0_0_10px_rgba(79,209,197,0.4),inset_0_1px_3px_rgba(0,0,0,0.35)] transition-all duration-300 ease-in-out";
 
       return (
-        <section id="contact" className="px-4 sm:px-6 py-16">
+        <section id="contact" className="px-4 sm:px-6 py-12 sm:py-16">
           <div className="max-w-6xl mx-auto rounded-[20px] border border-white/15 bg-gradient-to-br from-white/10 to-cyan-900/20 p-6 sm:p-8 lg:p-10 grid lg:grid-cols-2 gap-6 shadow-deep">
             <article className="reveal rounded-2xl border border-white/15 bg-black/35 p-5 sm:p-6">
               <h2 className="uppercase font-extrabold text-2xl sm:text-3xl">Contact Us</h2>
