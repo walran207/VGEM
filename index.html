@@ -34,9 +34,7 @@
   </script>
 
   <style>
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     body {
       font-family: "Montserrat", sans-serif;
@@ -115,8 +113,258 @@
       z-index: -1;
     }
 
-    .btn-ripple:hover::after {
-      transform: translateY(-65%);
+    .btn-ripple:hover::after { transform: translateY(-65%); }
+
+    /* ===== BUBBLE FX ===== */
+    .signal-screen {
+      --stage-size: clamp(260px, 36vw, 460px);
+      --main-size: clamp(126px, 15vw, 180px);
+      --mini-size: clamp(36px, 4.8vw, 56px);
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 12;
+    }
+
+    /* Stage movement for the main orb only (DVD-ish) */
+    .signal-track-x,
+    .signal-track-y {
+      position: absolute;
+      width: var(--stage-size);
+      height: var(--stage-size);
+      left: 0;
+      top: 0;
+      will-change: transform;
+    }
+
+    .signal-track-x {
+      animation: dvdMoveX 18s linear infinite alternate;
+      animation-delay: -9s;
+    }
+
+    .signal-track-y {
+      animation: dvdMoveY 13s linear infinite alternate;
+      animation-delay: -6.5s;
+    }
+
+    .signal-stage {
+      position: relative;
+      width: var(--stage-size);
+      height: var(--stage-size);
+    }
+
+    .signal-main-bubble {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--main-size);
+      height: var(--main-size);
+      border: 1px solid rgba(194, 215, 255, 0.5);
+      border-radius: 999px;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      pointer-events: auto;
+      background:
+        radial-gradient(circle at 30% 24%, rgba(248, 252, 255, 0.9) 0%, rgba(248, 252, 255, 0.2) 28%, rgba(248, 252, 255, 0) 46%),
+        radial-gradient(circle at 62% 64%, rgba(116, 143, 255, 0.8) 0%, rgba(70, 92, 224, 0.55) 42%, rgba(14, 26, 102, 0.42) 74%, rgba(6, 11, 54, 0.22) 100%);
+      box-shadow:
+        0 0 32px rgba(110, 146, 255, 0.32),
+        inset 0 0 30px rgba(125, 154, 255, 0.32),
+        inset 0 -16px 24px rgba(5, 11, 67, 0.52);
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.84;
+      transition: opacity 260ms ease;
+      will-change: transform, opacity;
+    }
+
+    .signal-main-bubble::after {
+      content: "";
+      position: absolute;
+      inset: 11%;
+      border-radius: inherit;
+      background: repeating-linear-gradient(
+        116deg,
+        rgba(189, 207, 255, 0.2) 0 2px,
+        rgba(189, 207, 255, 0) 2px 6px
+      );
+      mix-blend-mode: screen;
+      opacity: 0.5;
+    }
+
+    .signal-main-bubble:focus-visible {
+      outline: 2px solid rgba(103, 232, 249, 0.9);
+      outline-offset: 5px;
+    }
+
+    .signal-main-bubble:disabled { cursor: default; pointer-events: none; }
+
+    .signal-main-bubble.is-hidden {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.7);
+    }
+
+    .signal-main-bubble.is-idle {
+      opacity: 0.84;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .signal-main-bubble.is-expand {
+      animation: bubbleExpandSpring var(--expand-ms, 650ms) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .signal-main-bubble.is-reset {
+      animation: bubbleResetIn 820ms cubic-bezier(0.2, 1, 0.22, 1) forwards;
+      opacity: 0.92;
+    }
+
+    /* IMPORTANT CHANGE:
+       The cluster is full-screen + fixed so minis scatter independently across the viewport.
+       (Main bubble can still move around in its own stage.)
+    */
+    .signal-cluster {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 220ms ease;
+      z-index: 12;
+    }
+
+    .signal-cluster.is-visible { opacity: 1; }
+
+    /* IMPORTANT CHANGE:
+       Minis use start/end screen coordinates (sx/sy -> ex/ey) instead of tx/ty offsets.
+    */
+    .signal-mini {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: var(--mini-size);
+      height: var(--mini-size);
+      border-radius: 999px;
+      border: 1px solid rgba(194, 215, 255, 0.42);
+      background:
+        radial-gradient(circle at 34% 28%, rgba(242, 248, 255, 0.86) 0%, rgba(242, 248, 255, 0.14) 34%, rgba(242, 248, 255, 0) 54%),
+        radial-gradient(circle at 66% 68%, rgba(123, 153, 255, 0.78) 0%, rgba(70, 90, 221, 0.53) 46%, rgba(10, 19, 82, 0.38) 100%);
+      box-shadow: 0 0 16px rgba(113, 154, 255, 0.27);
+      transform: translate(var(--sx), var(--sy)) scale(0.18);
+      opacity: 0;
+      will-change: transform, opacity, filter;
+    }
+
+    .signal-mini.enter {
+      animation: bubbleOut 560ms cubic-bezier(0.2, 0.95, 0.3, 1) forwards;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    .signal-mini.visible {
+      transform: translate(var(--cx, var(--ex)), var(--cy, var(--ey))) scale(1);
+      opacity: 0.9;
+    }
+
+    .signal-mini.pop {
+      animation: bubblePop var(--pop-ms, 440ms) cubic-bezier(0.2, 0.86, 0.25, 1) forwards;
+    }
+
+    .signal-mini.gone {
+      transform: translate(
+        calc(var(--cx, var(--ex)) + var(--pop-far-x, 0px)),
+        calc(var(--cy, var(--ey)) + var(--pop-far-y, 0px))
+      ) scale(0);
+      opacity: 0;
+    }
+
+    @keyframes bubbleExpandSpring {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      48% { transform: translate(-50%, -50%) scale(1.3); }
+      72% { transform: translate(-50%, -50%) scale(1.15); }
+      100% { transform: translate(-50%, -50%) scale(1.22); }
+    }
+
+    /* IMPORTANT CHANGE:
+       bubbleOut goes from (sx,sy) to (ex,ey)
+    */
+    @keyframes bubbleOut {
+      0% {
+        opacity: 0.18;
+        transform: translate(var(--sx), var(--sy)) scale(0.18);
+      }
+      70% {
+        opacity: 1;
+        transform: translate(var(--ex), var(--ey)) scale(1.14);
+      }
+      100% {
+        opacity: 0.92;
+        transform: translate(var(--ex), var(--ey)) scale(1);
+      }
+    }
+
+    /* bubblePop starts from live position (cx,cy) when available. */
+    @keyframes bubblePop {
+      0% {
+        opacity: 0.92;
+        filter: brightness(1) saturate(1);
+        transform: translate(var(--cx, var(--ex)), var(--cy, var(--ey))) scale(1);
+      }
+      26% {
+        opacity: 1;
+        filter: brightness(1.32) saturate(1.35);
+        transform: translate(var(--cx, var(--ex)), var(--cy, var(--ey))) scale(1.3);
+      }
+      68% {
+        opacity: 0.7;
+        filter: brightness(1.08) saturate(1.18);
+        transform: translate(
+          calc(var(--cx, var(--ex)) + var(--pop-mid-x, 0px)),
+          calc(var(--cy, var(--ey)) + var(--pop-mid-y, 0px))
+        ) scale(0.84);
+      }
+      100% {
+        opacity: 0;
+        filter: brightness(0.92) saturate(1);
+        transform: translate(
+          calc(var(--cx, var(--ex)) + var(--pop-far-x, 0px)),
+          calc(var(--cy, var(--ey)) + var(--pop-far-y, 0px))
+        ) scale(0);
+      }
+    }
+
+    @keyframes bubbleResetIn {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.4);
+      }
+      50% {
+        opacity: 0.92;
+        transform: translate(-50%, -50%) scale(1.15);
+      }
+      100% {
+        opacity: 0.84;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    @keyframes dvdMoveX {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(calc(100vw - var(--stage-size))); }
+    }
+
+    @keyframes dvdMoveY {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(calc(100vh - var(--stage-size))); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .floating-shape,
+      .signal-track-x,
+      .signal-track-y,
+      .signal-main-bubble,
+      .signal-mini {
+        animation: none !important;
+        transition: none !important;
+      }
     }
   </style>
 </head>
@@ -140,6 +388,15 @@
       { id: 'stats', label: 'Customers' },
       { id: 'contact', label: 'Contact' },
     ];
+
+    const NUM_BUBBLES = 6;
+    const EXPAND_MS = 650;
+    const STAGGER_MS = 300;
+    const HIDE_AFTER_MS = 30000;
+    const RESET_DELAY_MS = 1000;
+    const MULTIPLY_MS = 560;
+    const POP_MS = 440;
+    const RESET_SETTLE_MS = 900;
 
     function Navbar() {
       const [scrolled, setScrolled] = useState(false);
@@ -235,6 +492,251 @@
       );
     }
 
+    function SignalOrbBackground() {
+      const mainRef = useRef(null);
+
+      // Build vectors that start from the main bubble's current on-screen position
+      // and end at random safe positions across the viewport.
+      const buildVectors = (spawnX, spawnY) => {
+        const PAD = 18;
+        // approximate mini size in px (max of your clamp) for safe edges
+        const MINI_APPROX = 56;
+
+        const maxX = Math.max(PAD, window.innerWidth - MINI_APPROX - PAD);
+        const maxY = Math.max(PAD, window.innerHeight - MINI_APPROX - PAD);
+
+        return Array.from({ length: NUM_BUBBLES }, () => {
+          const endX = PAD + Math.random() * (maxX - PAD);
+          const endY = PAD + Math.random() * (maxY - PAD);
+
+          // pop vectors for the sequential pop (slight burst)
+          const popAngle = Math.random() * Math.PI * 2;
+          const midDistance = 60 + Math.random() * 60;
+          const farDistance = midDistance + 80 + Math.random() * 80;
+
+          return {
+            sx: `${spawnX}px`,
+            sy: `${spawnY}px`,
+            ex: `${endX}px`,
+            ey: `${endY}px`,
+            popMidX: `${(Math.cos(popAngle) * midDistance).toFixed(2)}px`,
+            popMidY: `${(Math.sin(popAngle) * midDistance).toFixed(2)}px`,
+            popFarX: `${(Math.cos(popAngle) * farDistance).toFixed(2)}px`,
+            popFarY: `${(Math.sin(popAngle) * farDistance).toFixed(2)}px`,
+          };
+        });
+      };
+
+      const [phase, setPhase] = useState('idle');
+      const [popIndex, setPopIndex] = useState(-1);
+      const [cycleKey, setCycleKey] = useState(0);
+      const [vectors, setVectors] = useState([]);
+      const [bouncePositions, setBouncePositions] = useState([]);
+      const timersRef = useRef([]);
+      const rafRef = useRef(null);
+
+      const clearTimers = () => {
+        timersRef.current.forEach((timerId) => clearTimeout(timerId));
+        timersRef.current = [];
+      };
+
+      const stopBouncing = () => {
+        if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
+      };
+
+      const queue = (delayMs, callback) => {
+        const timerId = setTimeout(callback, delayMs);
+        timersRef.current.push(timerId);
+      };
+
+      const getSpawnPoint = () => {
+        const rect = mainRef.current?.getBoundingClientRect();
+        const centerX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+        const centerY = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
+
+        // Convert center to top-left-ish coordinate for the mini bubble so it visually spawns centered.
+        const MINI_APPROX = 56;
+        return { x: centerX - MINI_APPROX / 2, y: centerY - MINI_APPROX / 2 };
+      };
+
+      const triggerSequence = () => {
+        if (phase !== 'idle') return;
+        clearTimers();
+        stopBouncing();
+        setBouncePositions([]);
+
+        const spawn = getSpawnPoint();
+        setVectors(buildVectors(spawn.x, spawn.y));
+
+        setCycleKey((prev) => prev + 1);
+        setPopIndex(-1);
+        setPhase('expand');
+
+        queue(EXPAND_MS, () => setPhase('multiply'));
+        queue(EXPAND_MS + MULTIPLY_MS, () => setPhase('waiting'));
+        queue(HIDE_AFTER_MS, () => setPhase('popping'));
+
+        for (let i = 0; i < NUM_BUBBLES; i += 1) {
+          queue(HIDE_AFTER_MS + i * STAGGER_MS, () => setPopIndex(i));
+        }
+
+        const allPoppedAt = HIDE_AFTER_MS + (NUM_BUBBLES - 1) * STAGGER_MS + POP_MS;
+        queue(allPoppedAt + RESET_DELAY_MS, () => {
+          setPhase('reset');
+          setPopIndex(-1);
+        });
+        queue(allPoppedAt + RESET_DELAY_MS + RESET_SETTLE_MS, () => setPhase('idle'));
+      };
+
+      const onOrbKeyDown = (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          triggerSequence();
+        }
+      };
+
+      useEffect(() => {
+        stopBouncing();
+        if (phase !== 'waiting' || vectors.length === 0) return;
+
+        const miniApprox = 56;
+        const physics = vectors.map((vector) => ({
+          x: Number.parseFloat(vector.ex) || 0,
+          y: Number.parseFloat(vector.ey) || 0,
+          vx: (Math.random() > 0.5 ? 1 : -1) * (70 + Math.random() * 90),
+          vy: (Math.random() > 0.5 ? 1 : -1) * (65 + Math.random() * 95),
+        }));
+
+        setBouncePositions(physics.map((bubble) => ({ x: bubble.x, y: bubble.y })));
+
+        let lastTs = performance.now();
+        const tick = (ts) => {
+          const dt = Math.min((ts - lastTs) / 1000, 0.05);
+          lastTs = ts;
+
+          const maxX = Math.max(0, window.innerWidth - miniApprox);
+          const maxY = Math.max(0, window.innerHeight - miniApprox);
+
+          physics.forEach((bubble) => {
+            bubble.x += bubble.vx * dt;
+            bubble.y += bubble.vy * dt;
+
+            if (bubble.x <= 0) {
+              bubble.x = 0;
+              bubble.vx = Math.abs(bubble.vx);
+            } else if (bubble.x >= maxX) {
+              bubble.x = maxX;
+              bubble.vx = -Math.abs(bubble.vx);
+            }
+
+            if (bubble.y <= 0) {
+              bubble.y = 0;
+              bubble.vy = Math.abs(bubble.vy);
+            } else if (bubble.y >= maxY) {
+              bubble.y = maxY;
+              bubble.vy = -Math.abs(bubble.vy);
+            }
+          });
+
+          setBouncePositions(physics.map((bubble) => ({ x: bubble.x, y: bubble.y })));
+          rafRef.current = requestAnimationFrame(tick);
+        };
+
+        rafRef.current = requestAnimationFrame(tick);
+        return () => stopBouncing();
+      }, [phase, vectors]);
+
+      useEffect(() => {
+        const onResize = () => {
+          // if mid-cycle, keep current vectors; next cycle will regenerate.
+          // if idle, clear vectors so we don't leave offscreen minis.
+          if (phase === 'idle') {
+            setVectors([]);
+            setBouncePositions([]);
+          }
+        };
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+      }, [phase]);
+
+      useEffect(() => () => {
+        clearTimers();
+        stopBouncing();
+      }, []);
+
+      const isClusterVisible = phase === 'multiply' || phase === 'waiting' || phase === 'popping';
+      const mainClass = phase === 'expand'
+        ? 'signal-main-bubble is-expand'
+        : phase === 'reset'
+          ? 'signal-main-bubble is-reset'
+          : phase === 'idle'
+            ? 'signal-main-bubble is-idle'
+            : 'signal-main-bubble is-hidden';
+
+      return (
+        <div className="signal-screen">
+          {/* Main orb moves in its own stage */}
+          <div className="signal-track-x">
+            <div className="signal-track-y">
+              <div className="signal-stage">
+                <button
+                  ref={mainRef}
+                  type="button"
+                  className={mainClass}
+                  style={{ '--expand-ms': `${EXPAND_MS}ms` }}
+                  aria-label="Activate bubble animation"
+                  onClick={triggerSequence}
+                  onKeyDown={onOrbKeyDown}
+                  disabled={phase !== 'idle'}
+                ></button>
+              </div>
+            </div>
+          </div>
+
+          {/* Minis are full-screen and fixed (true scatter) */}
+          <div className={`signal-cluster ${isClusterVisible ? 'is-visible' : ''}`} key={cycleKey} style={{ '--pop-ms': `${POP_MS}ms` }}>
+            {vectors.map((vector, idx) => {
+              let bubbleState = '';
+              if (phase === 'multiply') bubbleState = 'enter';
+              if (phase === 'waiting') bubbleState = 'visible';
+              if (phase === 'popping') {
+                if (idx < popIndex) bubbleState = 'gone';
+                else if (idx === popIndex) bubbleState = 'pop';
+                else bubbleState = 'visible';
+              }
+
+              const live = bouncePositions[idx];
+              const cx = live ? `${live.x.toFixed(2)}px` : vector.ex;
+              const cy = live ? `${live.y.toFixed(2)}px` : vector.ey;
+
+              return (
+                <span
+                  key={idx}
+                  className={`signal-mini ${bubbleState}`}
+                  style={{
+                    '--sx': vector.sx,
+                    '--sy': vector.sy,
+                    '--ex': vector.ex,
+                    '--ey': vector.ey,
+                    '--cx': cx,
+                    '--cy': cy,
+                    '--pop-mid-x': vector.popMidX,
+                    '--pop-mid-y': vector.popMidY,
+                    '--pop-far-x': vector.popFarX,
+                    '--pop-far-y': vector.popFarY,
+                    '--delay': `${idx * 70}ms`,
+                  }}
+                ></span>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     function HeroSection() {
       useEffect(() => {
         const target = document.getElementById('logoCard');
@@ -250,7 +752,7 @@
       }, []);
 
       return (
-        <section id="hero" className="min-h-[82vh] sm:min-h-[88vh] grid place-items-center px-4 sm:px-6 py-10 sm:py-14">
+        <section id="hero" className="min-h-screen grid place-items-center px-4 sm:px-6 py-10 sm:py-14">
           <div id="heroGrid" className="max-w-6xl w-full grid lg:grid-cols-2 gap-8 lg:gap-10 items-center">
             <div id="logoCard" className="reveal w-full max-w-[560px] mx-auto rounded-[20px] p-[1px] bg-gradient-to-br from-cyan-300/45 via-white/20 to-brandViolet/45 shadow-[0_0_40px_rgba(79,209,197,0.15)]">
               <article className="rounded-[20px] p-6 sm:p-8 border border-white/10 bg-[rgba(255,255,255,0.05)] backdrop-blur-md shadow-[inset_0_1px_20px_rgba(255,255,255,0.06),0_24px_55px_rgba(0,0,0,0.38)] hover:scale-[1.01] transition-transform duration-300 ease-in-out">
@@ -315,8 +817,8 @@
 
     function ServicesSection() {
       return (
-        <section id="services" className="px-4 sm:px-6 pb-12 sm:pb-16">
-          <div className="max-w-6xl mx-auto grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        <section id="services" className="min-h-screen px-4 sm:px-6 py-12 sm:py-16 flex items-center">
+          <div className="max-w-6xl mx-auto w-full grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             <FeatureCard
               delay={0}
               title="Gigabit Internet"
@@ -358,23 +860,121 @@
       );
     }
 
+    function BenefitIcon({ kind }) {
+      if (kind === 'compensation') {
+        return (
+          <svg viewBox="0 0 72 72" className="w-20 h-20 mx-auto">
+            <path d="M18 15h30v42H18z" fill="#19BCD1" />
+            <path d="M43 18h11v18H43z" fill="#2F3544" />
+            <circle cx="30" cy="32" r="11" fill="#19BCD1" stroke="#2F3544" strokeWidth="2.5" />
+            <path d="M30 26v12M26 29h7" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M49 24l3 3-6 6-3-3z" fill="#FFFFFF" />
+          </svg>
+        );
+      }
+      if (kind === 'remote') {
+        return (
+          <svg viewBox="0 0 72 72" className="w-20 h-20 mx-auto">
+            <rect x="14" y="16" width="44" height="28" rx="3" fill="#19BCD1" stroke="#2F3544" strokeWidth="2.5" />
+            <path d="M28 54h16M36 44v10" stroke="#2F3544" strokeWidth="3" strokeLinecap="round" />
+            <circle cx="28" cy="30" r="5" fill="#FFFFFF" stroke="#2F3544" strokeWidth="2" />
+            <circle cx="45" cy="24" r="5" fill="#FFFFFF" stroke="#2F3544" strokeWidth="2" />
+          </svg>
+        );
+      }
+      if (kind === 'allowance') {
+        return (
+          <svg viewBox="0 0 72 72" className="w-20 h-20 mx-auto">
+            <path d="M16 22h40v28H16z" fill="#19BCD1" stroke="#2F3544" strokeWidth="2.5" />
+            <circle cx="36" cy="36" r="8" fill="#1C2433" />
+            <path d="M36 31v10M32 34h7" stroke="#19BCD1" strokeWidth="2.3" strokeLinecap="round" />
+            <path d="M20 28h5M20 44h5M47 28h5M47 44h5" stroke="#2F3544" strokeWidth="2" />
+          </svg>
+        );
+      }
+      if (kind === 'bonus') {
+        return (
+          <svg viewBox="0 0 72 72" className="w-20 h-20 mx-auto">
+            <path d="M17 46h8V30h-8zM29 46h8V24h-8zM41 46h8V18h-8z" fill="#19BCD1" />
+            <path d="M16 50h38" stroke="#2F3544" strokeWidth="2.5" />
+            <path d="M21 18c9 0 16-3 23-10" stroke="#2F3544" strokeWidth="2.5" fill="none" />
+            <path d="M41 8h6v6" stroke="#2F3544" strokeWidth="2.5" fill="none" />
+            <circle cx="18" cy="38" r="7" fill="#2F3544" />
+            <path d="M18 34v8M15 37h5" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        );
+      }
+      if (kind === 'hmo') {
+        return (
+          <svg viewBox="0 0 72 72" className="w-20 h-20 mx-auto">
+            <path d="M36 56c-14-9-20-16-20-24 0-7 5-12 12-12 4 0 7 2 8 5 1-3 4-5 8-5 7 0 12 5 12 12 0 8-6 15-20 24z" fill="#19BCD1" />
+            <path d="M23 37h8l4-8 4 12 3-6h7" stroke="#2F3544" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        );
+      }
+      if (kind === 'insurance') {
+        return (
+          <svg viewBox="0 0 72 72" className="w-20 h-20 mx-auto">
+            <path d="M36 14l18 8v13c0 12-8 20-18 24-10-4-18-12-18-24V22z" fill="#19BCD1" />
+            <path d="M28 36l5 5 11-12" stroke="#FFFFFF" strokeWidth="3.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M36 18l14 6v11c0 9-6 16-14 20-8-4-14-11-14-20V24z" stroke="#2F3544" strokeWidth="2.2" fill="none" />
+          </svg>
+        );
+      }
+      if (kind === 'pto') {
+        return (
+          <svg viewBox="0 0 72 72" className="w-20 h-20 mx-auto">
+            <path d="M16 42h40l-3 10H19z" fill="#19BCD1" />
+            <circle cx="26" cy="30" r="5" fill="#FFFFFF" stroke="#2F3544" strokeWidth="2" />
+            <circle cx="36" cy="26" r="5" fill="#FFFFFF" stroke="#2F3544" strokeWidth="2" />
+            <circle cx="46" cy="30" r="5" fill="#FFFFFF" stroke="#2F3544" strokeWidth="2" />
+            <path d="M23 49c3-4 7-6 13-6s10 2 13 6" stroke="#2F3544" strokeWidth="2.4" fill="none" />
+            <circle cx="24" cy="52" r="4" fill="#2F3544" />
+            <circle cx="48" cy="52" r="4" fill="#2F3544" />
+          </svg>
+        );
+      }
+      return (
+        <svg viewBox="0 0 72 72" className="w-20 h-20 mx-auto">
+          <circle cx="36" cy="36" r="8" fill="#19BCD1" stroke="#2F3544" strokeWidth="2" />
+          <circle cx="18" cy="18" r="8" fill="#19BCD1" stroke="#2F3544" strokeWidth="2" />
+          <circle cx="54" cy="18" r="8" fill="#19BCD1" stroke="#2F3544" strokeWidth="2" />
+          <circle cx="18" cy="54" r="8" fill="#19BCD1" stroke="#2F3544" strokeWidth="2" />
+          <circle cx="54" cy="54" r="8" fill="#19BCD1" stroke="#2F3544" strokeWidth="2" />
+          <path d="M24 22l8 8M48 22l-8 8M24 50l8-8M48 50l-8-8" stroke="#2F3544" strokeWidth="2.4" />
+        </svg>
+      );
+    }
+
     function WhyChooseSection() {
       const points = [
-        { title: '10 Years Expertise', text: 'A decade of fiber rollout and optimization across homes and businesses.' },
-        { title: 'Enterprise-Grade Fiber', text: 'Scalable infrastructure engineered for uptime, speed, and secure delivery.' },
-        { title: 'Local Customer Support', text: 'Responsive team support with real people available when your network matters.' },
-        { title: 'Vendo and Computer Support', text: 'We support vendo system connectivity and computer network setup for homes and businesses.' },
+        { icon: 'compensation', title: '10+ Years Experience', text: 'A decade of fiber deployment and service optimization for homes, shops, and business offices.' },
+        { icon: 'remote', title: 'Fast Fiber Speeds', text: 'Consistent high-speed internet built for streaming, gaming, video calls, and daily productivity.' },
+        { icon: 'allowance', title: 'Reliable Network', text: 'Stable infrastructure designed for strong uptime and dependable performance in your area.' },
+        { icon: 'bonus', title: 'Affordable Packages', text: 'Flexible plans that give you excellent value without sacrificing speed or reliability.' },
+        { icon: 'hmo', title: 'Residential and Business', text: 'Solutions tailored for both household users and growing teams that need stronger connectivity.' },
+        { icon: 'insurance', title: 'Quick Installation', text: 'Our team works fast to get your line active with minimal waiting and a smooth setup process.' },
+        { icon: 'pto', title: '24/7 Support', text: 'Get help when you need it from a responsive support team focused on fast issue resolution.' },
+        { icon: 'referral', title: 'Local Trusted Team', text: 'Work with a provider that understands your community and prioritizes long-term customer care.' },
       ];
 
       return (
-        <section id="why" className="px-4 sm:px-6 pb-12 sm:pb-16">
-          <div className="max-w-6xl mx-auto rounded-[20px] border border-white/15 bg-white/10 backdrop-blur-sm p-6 sm:p-8 lg:p-10">
-            <h2 className="reveal uppercase font-extrabold tracking-[1.4px] text-2xl sm:text-3xl">Why Choose VGEM Network</h2>
-            <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <section id="why" className="min-h-screen px-4 sm:px-6 py-12 sm:py-16 flex items-center">
+          <div className="max-w-6xl mx-auto w-full text-white">
+            <h2 className="reveal text-center font-extrabold text-[clamp(2rem,4vw,3rem)] leading-tight [text-shadow:0_8px_24px_rgba(0,0,0,0.4)]">Why Choose VGEM Network</h2>
+            <p className="reveal mt-4 max-w-4xl mx-auto text-center text-[15px] sm:text-[18px] leading-7 text-white/78">
+              From fast fiber speeds to dependable support, VGEM delivers practical internet solutions built for everyday use and long-term reliability.
+            </p>
+            <div className="mt-8 grid sm:grid-cols-2 xl:grid-cols-4 gap-3 auto-rows-fr items-stretch">
               {points.map((item, idx) => (
-                <article key={item.title} className="reveal rounded-2xl border border-white/15 bg-black/20 p-5 hover:border-brandCyan/70 hover:shadow-[0_0_22px_rgba(79,209,197,0.35)] transition-all duration-300 ease-in-out" style={{ transitionDelay: `${idx * 100}ms` }}>
-                  <h3 className="font-bold uppercase text-base tracking-[1px]">{item.title}</h3>
-                  <p className="mt-2 text-white/70 text-sm leading-6">{item.text}</p>
+                <article
+                  key={item.title}
+                  className="reveal h-full min-h-[320px] rounded-[10px] border border-white/15 bg-white/10 px-4 py-5 text-center flex flex-col hover:-translate-y-1 hover:border-brandCyan/70 hover:shadow-[0_0_22px_rgba(79,209,197,0.35),0_18px_30px_rgba(4,9,20,0.45)] transition-all duration-300 ease-in-out"
+                  style={{ transitionDelay: `${idx * 60}ms` }}
+                >
+                  <BenefitIcon kind={item.icon} />
+                  <h3 className="mt-2 font-extrabold text-[clamp(1.05rem,1.6vw,1.65rem)] leading-tight text-white">{item.title}</h3>
+                  <p className="mt-2 text-[15px] leading-7 text-white/75">{item.text}</p>
                 </article>
               ))}
             </div>
@@ -387,7 +987,10 @@
       const [value, setValue] = useState(0);
 
       useEffect(() => {
-        if (!start) return;
+        if (!start) {
+          setValue(0);
+          return;
+        }
         let startTime = null;
         let frame;
 
@@ -425,12 +1028,9 @@
         if (!node) return;
         const observer = new IntersectionObserver(
           (entries) => {
-            if (entries[0].isIntersecting) {
-              setStartCount(true);
-              observer.disconnect();
-            }
+            setStartCount(entries[0].isIntersecting);
           },
-          { threshold: 0.35 }
+          { threshold: 0.45 }
         );
         observer.observe(node);
         return () => observer.disconnect();
@@ -440,9 +1040,9 @@
         <section
           id="stats"
           ref={sectionRef}
-          className="px-4 sm:px-6 py-12 sm:py-16 border-y border-white/10 backdrop-blur-sm bg-[radial-gradient(circle_at_50%_40%,rgba(79,209,197,0.18),rgba(7,19,49,0.65)_38%,rgba(7,19,49,0.9)_100%)]"
+          className="min-h-screen px-4 sm:px-6 py-12 sm:py-16 border-y border-white/10 backdrop-blur-sm bg-[radial-gradient(circle_at_50%_40%,rgba(79,209,197,0.18),rgba(7,19,49,0.65)_38%,rgba(7,19,49,0.9)_100%)] flex items-center"
         >
-          <div className="max-w-6xl mx-auto grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="max-w-6xl mx-auto w-full grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {stats.map((item, idx) => (
               <article key={item.label} className="reveal rounded-[18px] bg-white/10 border border-white/15 p-6 text-center" style={{ transitionDelay: `${idx * 90}ms` }}>
                 <h3 className="font-black text-4xl lg:text-5xl leading-none [text-shadow:0_0_20px_rgba(79,209,197,0.42)]">
@@ -460,8 +1060,8 @@
       const inputClass = "w-full rounded-xl bg-black/25 border border-white/20 px-4 py-3 text-sm text-white/90 outline-none [box-shadow:inset_0_1px_3px_rgba(0,0,0,0.35)] focus:border-brandCyan focus:shadow-[0_0_10px_rgba(79,209,197,0.4),inset_0_1px_3px_rgba(0,0,0,0.35)] transition-all duration-300 ease-in-out";
 
       return (
-        <section id="contact" className="px-4 sm:px-6 py-12 sm:py-16">
-          <div className="max-w-6xl mx-auto rounded-[20px] border border-white/15 bg-gradient-to-br from-white/10 to-cyan-900/20 p-6 sm:p-8 lg:p-10 grid lg:grid-cols-2 gap-6 shadow-deep">
+        <section id="contact" className="min-h-screen px-4 sm:px-6 py-12 sm:py-16 flex items-center">
+          <div className="max-w-6xl mx-auto w-full rounded-[20px] border border-white/15 bg-gradient-to-br from-white/10 to-cyan-900/20 p-6 sm:p-8 lg:p-10 grid lg:grid-cols-2 gap-6 shadow-deep">
             <article className="reveal rounded-2xl border border-white/15 bg-black/35 p-5 sm:p-6">
               <h2 className="uppercase font-extrabold text-2xl sm:text-3xl">Contact Us</h2>
               <p className="mt-2 text-white/70 text-sm">Send us a message and our fiber team will get back to you quickly.</p>
@@ -485,12 +1085,7 @@
               </ul>
 
               <div className="mt-7 flex items-center gap-3">
-                {[
-                  { short: 'F', label: 'Facebook' },
-                  { short: 'X', label: 'X or Twitter' },
-                  { short: 'in', label: 'LinkedIn' },
-                  { short: 'IG', label: 'Instagram' },
-                ].map((item) => (
+                {[{ short: 'F', label: 'Facebook' }, { short: 'X', label: 'X or Twitter' }, { short: 'in', label: 'LinkedIn' }, { short: 'IG', label: 'Instagram' }].map((item) => (
                   <a key={item.label} href="#" className="w-10 h-10 rounded-full border border-white/30 bg-gradient-to-br from-brandCyan/35 to-brandViolet/40 grid place-items-center text-xs font-bold hover:scale-110 hover:rotate-6 hover:border-brandCyan hover:shadow-[0_0_20px_rgba(79,209,197,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandCyan/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1d45] transition-all duration-300 ease-in-out" aria-label={item.label}>
                     {item.short}
                   </a>
@@ -507,10 +1102,8 @@
         const observer = new IntersectionObserver(
           (entries) => {
             entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('in-view');
-                observer.unobserve(entry.target);
-              }
+              if (entry.isIntersecting) entry.target.classList.add('in-view');
+              else entry.target.classList.remove('in-view');
             });
           },
           { threshold: 0.14 }
@@ -522,6 +1115,7 @@
 
       return (
         <>
+          <SignalOrbBackground />
           <Navbar />
           <main>
             <HeroSection />
